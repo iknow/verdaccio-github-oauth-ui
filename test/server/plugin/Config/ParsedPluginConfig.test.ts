@@ -14,7 +14,6 @@ describe("ParsedPluginConfig", () => {
   const minimalPluginConfig: PluginConfig = {
     "client-id": "clientId",
     "client-secret": "clientSecret",
-    token: "token",
   }
   it.fails("middlewares key is required", () => {
     const invalidConfig: VerdaccioGithubOauthConfig = {
@@ -54,7 +53,6 @@ describe("ParsedPluginConfig", () => {
         "parsedRepos": [],
         "parsedTeams": [],
         "parsedUsers": [],
-        "token": "token",
         "url_prefix": "",
       }
     `)
@@ -68,7 +66,6 @@ describe("ParsedPluginConfig", () => {
     const minimalPluginConfig: PluginConfig = {
       "client-id": "clientId",
       "client-secret": "clientSecret",
-      token: "token",
       "enterprise-origin": "enterpriseOrigin",
       "cache-ttl-ms": 60 * 60 * 1000, // 1 hour
     }
@@ -162,7 +159,6 @@ describe("ParsedPluginConfig", () => {
             "user": "TEST_USER",
           },
         ],
-        "token": "token",
         "url_prefix": "/verdaccio/",
       }
     `)
@@ -176,7 +172,6 @@ describe("ParsedPluginConfig", () => {
     const minimalPluginConfig: PluginConfig = {
       "client-id": "clientId",
       "client-secret": "clientSecret",
-      token: "token",
       "enterprise-origin": "enterpriseOrigin",
     }
 

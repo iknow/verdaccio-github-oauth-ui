@@ -12,7 +12,6 @@ import { logger } from "../../logger"
 export interface PluginConfig {
   "client-id": string
   "client-secret": string
-  token: string
   "enterprise-origin"?: string
   "cache-ttl-ms"?: number
 }
@@ -104,7 +103,6 @@ export class ParsedPluginConfig {
   readonly url_prefix: string
   readonly clientId: string
   readonly clientSecret: string
-  readonly token: string
   readonly enterpriseOrigin: string | undefined
   readonly cacheTTLms: number | undefined
 
@@ -125,12 +123,6 @@ export class ParsedPluginConfig {
     this.clientSecret = getConfigValue<string>(
       this.config,
       "client-secret",
-      assert.string.nonEmpty,
-    )
-
-    this.token = getConfigValue<string>(
-      this.config,
-      "token",
       assert.string.nonEmpty,
     )
 
