@@ -28,6 +28,7 @@ export class GitHubAuthProvider implements AuthProvider {
     const queryParams = stringify({
       client_id: this.config.clientId,
       redirect_uri: callbackUrl,
+      scope: "read:org",
     })
     return this.webBaseUrl + `/login/oauth/authorize?` + queryParams
   }
@@ -50,14 +51,15 @@ export class GitHubAuthProvider implements AuthProvider {
     return response.data.login
   }
 
-  async getGroups(userName: string) {
+  async getGroups(token: string) {
+    const userName = await this.getUserName(token)
+
     const configuredUser = this.config.parsedUsers.find(
       (config) => config.user === userName,
     )
 
     const groups: string[] = []
     const promises: Promise<void>[] = []
-    const registryToken = String(this.config.token)
 
     if (configuredUser) {
       groups.push(configuredUser.group)
@@ -66,7 +68,7 @@ export class GitHubAuthProvider implements AuthProvider {
     this.config.parsedOrgs.forEach((config) => {
       const job = async () => {
         const canAccess = await this.client.requestOrganizationMembershipStatus(
-          registryToken,
+          token,
           config.org,
           userName,
         )
@@ -80,7 +82,7 @@ export class GitHubAuthProvider implements AuthProvider {
     this.config.parsedTeams.forEach((config) => {
       const job = async () => {
         const canAccess = await this.client.requestTeamMembershipStatus(
-          registryToken,
+          token,
           config.org,
           config.team,
           userName,
@@ -95,7 +97,7 @@ export class GitHubAuthProvider implements AuthProvider {
     this.config.parsedRepos.forEach((config) => {
       const job = async () => {
         const canAccess = await this.client.requestRepositoryCollaboratorStatus(
-          registryToken,
+          token,
           config.owner,
           config.repo,
           userName,

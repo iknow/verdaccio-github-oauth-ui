@@ -31,7 +31,6 @@ export type VerdaccioConfig = Omit<
 export interface PluginConfig {
   "client-id": string
   "client-secret": string
-  token: string
   "enterprise-origin"?: string
 }
 
@@ -132,12 +131,6 @@ export class ParsedPluginConfig {
   readonly clientSecret = getConfigValue<string>(
     this.config,
     "client-secret",
-    assert.string.nonEmpty,
-  )
-
-  readonly token = getConfigValue<string>(
-    this.config,
-    "token",
     assert.string.nonEmpty,
   )
 

@@ -22,16 +22,16 @@ export class Cache {
     private readonly cacheTTLms = 10_000, // 10s
   ) {}
 
-  async getGroups(userName: string): Promise<string[]> {
+  async getGroups(token: string): Promise<string[]> {
     let groups: string[] | null = null
 
     try {
-      const key = `${this.providerId}/${userName}`
+      const key = `${this.providerId}/${token}`
 
       groups = this.cache.get(key)
 
       if (!groups) {
-        groups = await this.authProvider.getGroups(userName)
+        groups = await this.authProvider.getGroups(token)
       }
 
       this.cache.put(key, groups || [], this.cacheTTLms)

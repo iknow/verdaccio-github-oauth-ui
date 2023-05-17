@@ -85,7 +85,7 @@ export class Plugin implements IPluginMiddleware<any>, IPluginAuth<any> {
         return
       }
 
-      const userGroups = await this.cache.getGroups(userName)
+      const userGroups = await this.cache.getGroups(userToken)
       const user = await this.core.createAuthenticatedUser(userName, userGroups)
 
       callback(null, user.real_groups)

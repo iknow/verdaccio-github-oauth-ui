@@ -68,7 +68,7 @@ export class WebFlow implements IPluginMiddleware<any> {
       const code = this.provider.getCode(req)
       const githubToken = await this.provider.getToken(code)
       const userName = await this.provider.getUserName(githubToken)
-      const userGroups = await this.provider.getGroups(userName)
+      const userGroups = await this.provider.getGroups(githubToken)
       const user = await this.core.createAuthenticatedUser(userName, userGroups)
       const uiToken = await this.verdaccio.issueUiToken(user)
       const npmToken = await this.verdaccio.issueNpmToken(user, githubToken)
