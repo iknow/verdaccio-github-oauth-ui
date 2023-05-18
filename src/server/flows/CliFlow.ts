@@ -5,17 +5,28 @@ import { logger } from "../../logger"
 import { getCallbackPath } from "../../redirect"
 import { AuthProvider } from "../plugin/AuthProvider"
 import { Verdaccio } from "../plugin/Verdaccio"
-import { createAuthenticatedUser, IPluginMiddleware } from "../helpers"
+import { Cache } from "../plugin/Cache"
+import { ParsedPluginConfig } from "../plugin/Config";
+import { createAuthenticatedUser, IPluginMiddleware, organizationAllowed } from "../helpers"
 
 const pluginCallbackeUrl = getCallbackPath(cliProviderId)
 
 export class CliFlow implements IPluginMiddleware {
   private readonly verdaccio: Verdaccio
   private readonly provider: AuthProvider
+  private readonly config: ParsedPluginConfig;
+  private readonly cache: Cache;
 
-  constructor(verdaccio: Verdaccio, provider: AuthProvider) {
+  constructor(
+    verdaccio: Verdaccio,
+    provider: AuthProvider,
+    config: ParsedPluginConfig,
+    cache: Cache,
+  ) {
     this.verdaccio = verdaccio
     this.provider = provider
+    this.config = config;
+    this.cache = cache;
   }
 
   /**
@@ -32,6 +43,11 @@ export class CliFlow implements IPluginMiddleware {
       const code = this.provider.getCode(req)
       const userToken = await this.provider.getToken(code)
       const userName = await this.provider.getUserName(userToken)
+
+      if (!organizationAllowed(this.config, await this.cache.getGroups(userName))) {
+        throw new Error("User not part of org");
+      }
+
       const user = createAuthenticatedUser(userName)
       const npmToken = await this.verdaccio.issueNpmToken(user, userToken)
 

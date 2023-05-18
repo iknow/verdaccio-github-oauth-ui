@@ -27,6 +27,20 @@ export function createAuthenticatedUser(userName: string): User {
   return user
 }
 
+export function organizationAllowed(
+  config: ParsedPluginConfig,
+  userGroups: string[],
+): boolean {
+  if (
+    config.org &&
+    !userGroups.includes(`github/org/${config.org}`)
+  ) {
+      return false;
+  }
+
+  return true;
+}
+
 export interface IPluginMiddleware {
   register_middlewares(app: Application): void
 }

@@ -3,6 +3,7 @@ import { Plugin } from "src/server/plugin/Plugin"
 import {
   createTestAuthProvider,
   createTestPlugin,
+  createTestVerdaccioConfig,
   testOAuthToken,
   testUserName,
 } from "test/utils"
@@ -51,6 +52,21 @@ describe("Plugin", () => {
       await plugin.authenticate(testUserName, testOAuthToken, (err, groups) => {
         expect(err).toBeNull()
         expect(groups).toEqual([])
+      })
+    })
+
+    it("user outside of org cannot authenticate", async () => {
+      plugin = createTestPlugin(
+        createTestVerdaccioConfig(
+          {},
+          {
+            org: "someorg",
+          },
+        ),
+      )
+      await plugin.authenticate(testUserName, testOAuthToken, (err, groups) => {
+        expect(err).not.toBeNull()
+        expect(err).toMatch(/User not part of org/)
       })
     })
   })

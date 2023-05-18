@@ -14,6 +14,7 @@ export interface PluginConfig {
   "client-secret": string
   "enterprise-origin"?: string
   "cache-ttl-ms"?: number
+  org?: string
 }
 
 export interface VerdaccioGithubOauthConfig extends VerdaccioConfig {
@@ -105,6 +106,7 @@ export class ParsedPluginConfig {
   readonly clientSecret: string
   readonly enterpriseOrigin: string | undefined
   readonly cacheTTLms: number | undefined
+  readonly org: string | undefined;
 
   constructor(readonly config: VerdaccioGithubOauthConfig) {
     validateVersion()
@@ -133,6 +135,12 @@ export class ParsedPluginConfig {
         assert.undefined,
         assert.string.url.nonEmpty.not.startsWith(publicGitHubOrigin),
       ),
+    )
+
+    this.org = getConfigValue<string>(
+      this.config,
+      "org",
+      assert.any(assert.undefined, assert.string.nonEmpty),
     )
 
     this.cacheTTLms = getConfigValue<number>(
@@ -178,6 +186,10 @@ export class ParsedPluginConfig {
         })
       },
     )
+
+    if (this.org) {
+      configuredGroups.push(`github/org/${this.org}`)
+    }
 
     const configuredGroupsDeduped = [...new Set(configuredGroups)]
 

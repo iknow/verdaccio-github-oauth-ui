@@ -49,6 +49,7 @@ describe("ParsedPluginConfig", () => {
         "clientSecret": "clientSecret",
         "configuredGroupsMap": {},
         "enterpriseOrigin": undefined,
+        "org": undefined,
         "parsedOrgs": [],
         "parsedRepos": [],
         "parsedTeams": [],
@@ -128,6 +129,7 @@ describe("ParsedPluginConfig", () => {
           "github/user/TEST_USER/repo/TEST_REPO": true,
         },
         "enterpriseOrigin": "enterpriseOrigin",
+        "org": undefined,
         "parsedOrgs": [
           {
             "group": "github/org/TEST_ORG",

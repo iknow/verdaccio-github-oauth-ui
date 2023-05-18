@@ -9,7 +9,7 @@ import { VerdaccioGithubOauthConfig, ParsedPluginConfig } from "./Config"
 import { PatchHtml } from "./PatchHtml"
 import { ServeStatic } from "./ServeStatic"
 import { Verdaccio } from "./Verdaccio"
-import { createAuthenticatedUser } from "../helpers"
+import { createAuthenticatedUser, organizationAllowed } from "../helpers"
 
 type Package = PackageAccess & (AllowAccess | VerdaccioGithubOauthConfig)
 type Action = "access" | "publish" | "unpublish"
@@ -63,8 +63,8 @@ export class Plugin
     const children = [
       new ServeStatic(),
       new PatchHtml(this.parsedConfig),
-      new WebFlow(this.verdaccio, this.parsedConfig, this.provider),
-      new CliFlow(this.verdaccio, this.provider),
+      new WebFlow(this.verdaccio, this.parsedConfig, this.provider, this.cache),
+      new CliFlow(this.verdaccio, this.provider, this.parsedConfig, this.cache),
     ]
 
     for (const child of children) {
@@ -101,7 +101,8 @@ export class Plugin
       if (
         !userName ||
         !userToken ||
-        !(await this.userNameAndTokenMatch(userName, userToken))
+        !(await this.userNameAndTokenMatch(userName, userToken)) ||
+        !(organizationAllowed(this.parsedConfig, await this.cache.getGroups(userToken)))
       ) {
         callback(null, false)
         return
