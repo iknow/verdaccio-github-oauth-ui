@@ -32,6 +32,7 @@ export interface PluginConfig {
   "client-id": string
   "client-secret": string
   "enterprise-origin"?: string
+  org?: string
 }
 
 export interface Config extends VerdaccioConfig {
@@ -143,6 +144,12 @@ export class ParsedPluginConfig {
     ),
   )
 
+  readonly org = getConfigValue<string>(
+    this.config,
+    "org",
+    assert.any(assert.undefined, assert.string.nonEmpty),
+  )
+
   constructor(readonly config: Config) {
     validateVersion()
 
@@ -186,6 +193,10 @@ export class ParsedPluginConfig {
         })
       },
     )
+
+    if (this.org) {
+      configuredGroups.push(`github/org/${this.org}`)
+    }
 
     const configuredGroupsDeduped = [...new Set(configuredGroups)]
 

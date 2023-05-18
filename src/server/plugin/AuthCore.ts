@@ -19,6 +19,13 @@ export class AuthCore {
       .filter(Boolean)
       .sort()
 
+    if (
+      this.config.org &&
+      !relevantGroups.includes(`github/org/${this.config.org}`)
+    ) {
+      throw new Error("User not part of org")
+    }
+
     const user: User = {
       name: userName,
       groups: [...authenticatedUserGroups],
