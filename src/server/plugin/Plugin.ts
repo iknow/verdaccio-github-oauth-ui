@@ -72,23 +72,6 @@ export class Plugin
     }
   }
 
-  private async userNameAndTokenMatch(
-    userName: string,
-    userToken: string,
-  ): Promise<boolean> {
-    try {
-      const userNameForToken = await this.provider.getUserName(userToken)
-      if (userNameForToken !== userName) {
-        logger.error("The token does not match the user name")
-        return false
-      }
-      return true
-    } catch (error) {
-      logger.error(error)
-      return false
-    }
-  }
-
   /**
    * pluginUtils.Auth
    */
@@ -98,17 +81,24 @@ export class Plugin
     callback: pluginUtils.AuthCallback,
   ): Promise<void> {
     try {
-      if (
-        !userName ||
-        !userToken ||
-        !(await this.userNameAndTokenMatch(userName, userToken)) ||
-        !(organizationAllowed(this.parsedConfig, await this.cache.getGroups(userToken)))
-      ) {
+      if (!userName || !userToken) {
         callback(null, false)
         return
       }
 
-      const user = createAuthenticatedUser(userName)
+      const userInfo = await this.cache.getUserInfo(userToken)
+      if (userInfo === null || userInfo.userName !== userName) {
+        logger.error("The token does not match the user name")
+        callback(null, false)
+        return
+      }
+
+      if(!(organizationAllowed(this.parsedConfig, userInfo.userGroups))) {
+        callback(null, false);
+        return;
+      }
+
+      const user = createAuthenticatedUser(userInfo.userName);
 
       callback(null, user.real_groups)
     } catch (error) {
