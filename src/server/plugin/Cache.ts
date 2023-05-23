@@ -3,6 +3,11 @@ import { Cache as MemoryCache } from "memory-cache"
 import { logger } from "../../logger"
 import { AuthProvider } from "./AuthProvider"
 
+export interface UserInfo {
+  userName: string
+  userGroups: string[]
+}
+
 /**
  * When installing packages, the CLI makes a burst of package requests.
  *
@@ -14,7 +19,7 @@ import { AuthProvider } from "./AuthProvider"
  * has been made for a short period.
  */
 export class Cache {
-  private readonly cache = new MemoryCache<string, string[]>()
+  private readonly cache = new MemoryCache<string, UserInfo>()
   private readonly providerId = this.authProvider.getId()
 
   constructor(
@@ -22,23 +27,34 @@ export class Cache {
     private readonly cacheTTLms = 10_000, // 10s
   ) {}
 
-  async getGroups(token: string): Promise<string[]> {
-    let groups: string[] | null = null
-
+  async getUserInfo(token: string): Promise<UserInfo | null> {
     try {
       const key = `${this.providerId}/${token}`
 
-      groups = this.cache.get(key)
+      let userInfo = this.cache.get(key)
 
-      if (!groups) {
-        groups = await this.authProvider.getGroups(token)
+      if (!userInfo) {
+        const userName = await this.authProvider.getUserName(token)
+        const userGroups = await this.authProvider.getGroups(token)
+
+        userInfo = {
+          userName,
+          userGroups,
+        }
       }
 
-      this.cache.put(key, groups || [], this.cacheTTLms)
+      this.cache.put(key, userInfo, this.cacheTTLms)
+
+      return userInfo
     } catch (error) {
       logger.error(error)
     }
 
-    return groups || []
+    return null
+  }
+
+  async getGroups(token: string): Promise<string[]> {
+    const userInfo = await this.getUserInfo(token)
+    return userInfo?.userGroups || []
   }
 }
