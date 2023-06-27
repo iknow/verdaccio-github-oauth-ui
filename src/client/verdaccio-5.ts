@@ -2,7 +2,7 @@ import { copyToClipboard, init, isLoggedIn } from "./plugin"
 
 const loginButtonSelector = `[data-testid="header--button-login"]`
 const logoutButtonSelector = `[data-testid="header--button-logout"]`
-const dialogContentSelector = `[data-testid="registryInfo--dialog"] [role="tabpanel"] div`
+const dialogContentSelector = `[data-testid="registryInfo--dialog"] #simple-tabpanel-0 div`
 const copyButtonSelector = `[data-testid="copy"]`
 
 function getUsageInfo(fileName: string, fileContents: string) {
