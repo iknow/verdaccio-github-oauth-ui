@@ -57,8 +57,7 @@ function updateUsageInfo(): void {
   const children = [
     ...getUsageInfo(
       ".yarnrc.yml",
-      `// .yarnrc.yml
-enableGlobalCache: true
+      `enableGlobalCache: true
 
 npmRegistries:
   //${location.host}:
@@ -69,9 +68,7 @@ npmRegistries:
 
     ...getUsageInfo(
       ".npmrc",
-      `# .npmrc
-//${location.host}/:_authToken=${authToken}
-`,
+      `//${location.host}/:_authToken=${authToken}`,
     ),
   ]
 
