@@ -66,10 +66,7 @@ npmRegistries:
 `,
     ),
 
-    ...getUsageInfo(
-      ".npmrc",
-      `//${location.host}/:_authToken=${authToken}`,
-    ),
+    ...getUsageInfo(".npmrc", `//${location.host}/:_authToken=${authToken}`),
   ]
 
   dialogContent.replaceChildren(...children)
