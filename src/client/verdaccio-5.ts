@@ -1,55 +1,83 @@
-import { copyToClipboard, getUsageInfo, init, isLoggedIn } from "./plugin"
+import { copyToClipboard, init, isLoggedIn } from "./plugin"
 
 const loginButtonSelector = `[data-testid="header--button-login"]`
 const logoutButtonSelector = `[data-testid="header--button-logout"]`
-const tabSelector = `[data-testid="tab-content"]`
+const dialogContentSelector = `[data-testid="registryInfo--dialog"] [role="tabpanel"] div`
+const copyButtonSelector = `[data-testid="copy"]`
+
+function getUsageInfo(fileName: string, fileContents: string) {
+  const sourceButton = document.querySelector(copyButtonSelector)
+  if (!sourceButton) return []
+
+  const button = sourceButton.cloneNode(true) as HTMLButtonElement
+  button.onclick = (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    copyToClipboard(fileContents)
+  }
+
+  const contents = document.createElement("pre")
+  contents.style.fontFamily = "monospace"
+  contents.style.overflowX = "scroll"
+  contents.style.backgroundColor = "whitesmoke"
+  contents.style.padding = "5px"
+  contents.style.borderRadius = "5px"
+  contents.textContent = fileContents
+
+  const name = document.createElement("code")
+  name.style.fontFamily = "monospace"
+  name.style.backgroundColor = "whitesmoke"
+  name.style.color = "firebrick"
+  name.style.borderRadius = "3px"
+  name.style.padding = "3px"
+  name.textContent = fileName
+
+  const description = document.createElement("p")
+  description.insertAdjacentText("beforeend", "Copy the following into ")
+  description.appendChild(name)
+  description.insertAdjacentText("beforeend", " in your home directory:")
+  description.appendChild(button)
+
+  return [description, contents]
+}
 
 function updateUsageInfo(): void {
   const loggedIn = isLoggedIn()
   if (!loggedIn) return
 
-  const tabs = document.querySelectorAll(tabSelector)
-  if (!tabs) return
+  const dialogContent = document.querySelector(dialogContentSelector)
+  if (!dialogContent) return
 
-  const usageInfoLines = getUsageInfo().split("\n").reverse()
+  const alreadyReplaced = dialogContent.getAttribute("replaced") === "true"
+  if (alreadyReplaced) return
 
-  tabs.forEach((tab) => {
-    const alreadyReplaced = tab.getAttribute("replaced") === "true"
-    if (alreadyReplaced) return
+  const authToken = localStorage.getItem("npm")
+  if (!authToken) return
 
-    const commands = Array.from<HTMLElement>(tab.querySelectorAll("button"))
-      .map((node) => node.parentElement!)
-      .filter((node) => !!node.innerText.match(/^(npm|pnpm|yarn)/))
-    if (!commands.length) return
+  const children = [
+    ...getUsageInfo(
+      ".yarnrc.yml",
+      `// .yarnrc.yml
+enableGlobalCache: true
 
-    usageInfoLines.forEach((info) => {
-      const cloned = commands[0].cloneNode(true) as HTMLElement
-      const textEl = cloned.querySelector("span")!
-      textEl.innerText = info
+npmRegistries:
+  //${location.host}:
+    npmAlwaysAuth: true
+    npmAuthToken: "${authToken}"
+`,
+    ),
 
-      const copyEl = cloned.querySelector("button")!
-      copyEl.style.visibility = loggedIn ? "visible" : "hidden"
-      copyEl.onclick = (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        copyToClipboard(info)
-      }
+    ...getUsageInfo(
+      ".npmrc",
+      `# .npmrc
+//${location.host}/:_authToken=${authToken}
+`,
+    ),
+  ]
 
-      commands[0].parentElement!.appendChild(cloned)
-      tab.setAttribute("replaced", "true")
-    })
+  dialogContent.replaceChildren(...children)
 
-    // Remove commands that don't work with oauth
-    commands.forEach((node) => {
-      if (
-        node.innerText.includes("adduser") ||
-        node.innerText.includes("set password")
-      ) {
-        node.parentElement!.removeChild(node)
-        tab.setAttribute("replaced", "true")
-      }
-    })
-  })
+  dialogContent.setAttribute("replaced", "true")
 }
 
 init({
