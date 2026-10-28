@@ -44,24 +44,9 @@ export type ParsedRepo = {
   repo: string
 }
 
-/**
- * e.g. "5.0.4"
- */
-export function getVersion(): string {
-  return require("verdaccio/package.json").version
-}
-
 //
 // Validation
 //
-
-function validateVersion() {
-  const version = getVersion()
-
-  if (version < "5") {
-    throw new Error("This plugin requires verdaccio 5 or above")
-  }
-}
 
 function validateNodeExists(
   config: VerdaccioGithubOauthConfig,
@@ -109,8 +94,6 @@ export class ParsedPluginConfig {
   readonly org: string | undefined;
 
   constructor(readonly config: VerdaccioGithubOauthConfig) {
-    validateVersion()
-
     validateNodeExists(config, "middlewares")
     validateNodeExists(config, "auth")
 
