@@ -10,7 +10,7 @@ describe("GitHubAuthProvider", () => {
       const loginUrl = provider.getLoginUrl("callbackUrl")
 
       expect(loginUrl).toMatchInlineSnapshot(
-        '"https://github.com/login/oauth/authorize?client_id=CLIENT_ID&redirect_uri=callbackUrl"',
+        '"https://github.com/login/oauth/authorize?client_id=CLIENT_ID&redirect_uri=callbackUrl&scope=read%3Aorg"',
       )
     })
 
@@ -23,7 +23,7 @@ describe("GitHubAuthProvider", () => {
       const loginUrl = provider.getLoginUrl("callbackUrl")
 
       expect(loginUrl).toMatchInlineSnapshot(
-        '"https://example.github.com/login/oauth/authorize?client_id=CLIENT_ID&redirect_uri=callbackUrl"',
+        '"https://example.github.com/login/oauth/authorize?client_id=CLIENT_ID&redirect_uri=callbackUrl&scope=read%3Aorg"',
       )
     })
   })

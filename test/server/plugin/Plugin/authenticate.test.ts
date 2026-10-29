@@ -3,8 +3,10 @@ import { Plugin } from "src/server/plugin/Plugin"
 import {
   createTestAuthProvider,
   createTestPlugin,
+  createTestVerdaccioConfig,
   testOAuthToken,
   testUserName,
+  testProviderGroups,
 } from "test/utils"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -50,7 +52,22 @@ describe("Plugin", () => {
     it("valid user name and token can authenticate", async () => {
       await plugin.authenticate(testUserName, testOAuthToken, (err, groups) => {
         expect(err).toBeNull()
-        expect(groups).toEqual([])
+        expect(groups).toEqual(testProviderGroups)
+      })
+    })
+
+    it("user outside of org cannot authenticate", async () => {
+      plugin = createTestPlugin(
+        createTestVerdaccioConfig(
+          {},
+          {
+            org: "someorg",
+          },
+        ),
+      )
+      await plugin.authenticate(testUserName, testOAuthToken, (err, groups) => {
+        expect(err).toBeNull()
+        expect(groups).toBe(false)
       })
     })
   })

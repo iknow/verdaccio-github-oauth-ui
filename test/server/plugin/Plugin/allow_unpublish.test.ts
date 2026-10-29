@@ -1,26 +1,16 @@
 import { AllowAccess, PackageAccess, RemoteUser } from "@verdaccio/types"
-import { Cache } from "src/server/plugin/Cache"
 import { Plugin } from "src/server/plugin/Plugin"
 import { createTestPackage, createTestPlugin, createTestUser } from "test/utils"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it } from "vitest"
 
 describe("Plugin", () => {
   let plugin: Plugin
   let user: RemoteUser
   let pkg: AllowAccess & PackageAccess
-  let mockCache: Cache
 
   describe("allow_unpublish", () => {
     beforeEach(() => {
       plugin = createTestPlugin()
-
-      // Create a mock implementation of Cache
-      mockCache = {
-        getGroups: vi.fn().mockResolvedValue([]),
-      } as any
-
-      // Replace the plugin's cache with our mock
-      ;(plugin as any).cache = mockCache
     })
 
     it("does not grant access to unauthenticated users", async () => {
@@ -58,8 +48,7 @@ describe("Plugin", () => {
     })
 
     it("protected packages can be accessed with the required permission group", async () => {
-      mockCache.getGroups = vi.fn().mockResolvedValue(["required-group"])
-      user = createTestUser()
+      user = { ...createTestUser(), groups: ["required-group"] }
       pkg = createTestPackage({
         access: ["does-not-actually-matter"],
         publish: ["does-not-actually-matter"],
@@ -76,8 +65,7 @@ describe("Plugin", () => {
     })
 
     it("does not return `granted` status when `unpublish` is set up to fall back to `publish`", async () => {
-      mockCache.getGroups = vi.fn().mockResolvedValue(["required-group"])
-      user = createTestUser()
+      user = { ...createTestUser(), groups: ["required-group"] }
       pkg = createTestPackage({
         access: ["does-not-actually-matter"],
         publish: ["does-not-actually-matter"],
