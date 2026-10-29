@@ -98,7 +98,7 @@ export class Plugin
         return;
       }
 
-      const user = createAuthenticatedUser(userInfo.userName);
+      const user = createAuthenticatedUser(userInfo.userName, userInfo.userGroups);
 
       callback(null, user.real_groups)
     } catch (error) {
@@ -120,7 +120,7 @@ export class Plugin
     }
 
     const requiredGroups = pkg[action] as string[] | undefined
-    const userGroups = await this.cache.getGroups(user.name)
+    const userGroups = user.groups
     const grant = !!requiredGroups?.some((group) => userGroups.includes(group))
 
     logAccess(user, pkg, action, grant)

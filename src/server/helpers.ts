@@ -14,13 +14,11 @@ export function getBaseUrl(config: ParsedPluginConfig, req: Request) {
   return baseUrlWithoutTrailingSlash
 }
 
-export function createAuthenticatedUser(userName: string): User {
+export function createAuthenticatedUser(userName: string, userGroups: string[]): User {
   const user: User = {
     name: userName,
     groups: [...authenticatedUserGroups],
-    // groups returned by GH are not used here and not saved in the JWT token
-    // to avoid Verdaccio granting access based on the outdated groups
-    real_groups: [],
+    real_groups: [...userGroups],
   }
 
   logger.log("User successfully authenticated:", user)

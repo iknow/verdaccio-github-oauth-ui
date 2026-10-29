@@ -44,11 +44,12 @@ export class CliFlow implements IPluginMiddleware {
       const userToken = await this.provider.getToken(code)
       const userName = await this.provider.getUserName(userToken)
 
-      if (!organizationAllowed(this.config, await this.cache.getGroups(userName))) {
+      const userGroups = await this.cache.getGroups(userToken)
+      if (!organizationAllowed(this.config, userGroups)) {
         throw new Error("User not part of org");
       }
 
-      const user = createAuthenticatedUser(userName)
+      const user = createAuthenticatedUser(userName, userGroups)
       const npmToken = await this.verdaccio.issueNpmToken(user, userToken)
 
       params.status = "success"
