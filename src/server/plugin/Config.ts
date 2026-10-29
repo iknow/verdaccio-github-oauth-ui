@@ -91,7 +91,7 @@ export class ParsedPluginConfig {
   readonly clientSecret: string
   readonly enterpriseOrigin: string | undefined
   readonly cacheTTLms: number | undefined
-  readonly org: string | undefined;
+  readonly org: string | undefined
 
   constructor(readonly config: VerdaccioGithubOauthConfig) {
     validateNodeExists(config, "middlewares")

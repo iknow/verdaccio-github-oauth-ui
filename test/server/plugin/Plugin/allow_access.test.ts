@@ -11,7 +11,6 @@ describe("Plugin", () => {
   describe("allow_access", () => {
     beforeEach(() => {
       plugin = createTestPlugin()
-
     })
 
     it("does not grant access to unauthenticated users", async () => {

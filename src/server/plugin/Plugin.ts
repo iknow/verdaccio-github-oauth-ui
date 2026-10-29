@@ -93,12 +93,15 @@ export class Plugin
         return
       }
 
-      if(!(organizationAllowed(this.parsedConfig, userInfo.userGroups))) {
-        callback(null, false);
-        return;
+      if (!organizationAllowed(this.parsedConfig, userInfo.userGroups)) {
+        callback(null, false)
+        return
       }
 
-      const user = createAuthenticatedUser(userInfo.userName, userInfo.userGroups);
+      const user = createAuthenticatedUser(
+        userInfo.userName,
+        userInfo.userGroups,
+      )
 
       callback(null, user.real_groups)
     } catch (error) {

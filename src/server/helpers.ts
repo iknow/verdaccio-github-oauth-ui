@@ -14,7 +14,10 @@ export function getBaseUrl(config: ParsedPluginConfig, req: Request) {
   return baseUrlWithoutTrailingSlash
 }
 
-export function createAuthenticatedUser(userName: string, userGroups: string[]): User {
+export function createAuthenticatedUser(
+  userName: string,
+  userGroups: string[],
+): User {
   const user: User = {
     name: userName,
     groups: [...authenticatedUserGroups],
@@ -29,14 +32,11 @@ export function organizationAllowed(
   config: ParsedPluginConfig,
   userGroups: string[],
 ): boolean {
-  if (
-    config.org &&
-    !userGroups.includes(`github/org/${config.org}`)
-  ) {
-      return false;
+  if (config.org && !userGroups.includes(`github/org/${config.org}`)) {
+    return false
   }
 
-  return true;
+  return true
 }
 
 export interface IPluginMiddleware {

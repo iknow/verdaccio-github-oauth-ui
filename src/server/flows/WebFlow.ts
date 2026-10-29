@@ -84,7 +84,7 @@ export class WebFlow implements IPluginMiddleware {
 
       const userGroups = await this.cache.getGroups(githubToken)
       if (!organizationAllowed(this.config, userGroups)) {
-        throw new Error("User not part of org");
+        throw new Error("User not part of org")
       }
 
       const user = createAuthenticatedUser(userName, userGroups)
