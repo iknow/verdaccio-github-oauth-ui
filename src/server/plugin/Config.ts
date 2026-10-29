@@ -12,9 +12,9 @@ import { logger } from "../../logger"
 export interface PluginConfig {
   "client-id": string
   "client-secret": string
-  token: string
   "enterprise-origin"?: string
   "cache-ttl-ms"?: number
+  org?: string
 }
 
 export interface VerdaccioGithubOauthConfig extends VerdaccioConfig {
@@ -44,24 +44,9 @@ export type ParsedRepo = {
   repo: string
 }
 
-/**
- * e.g. "5.0.4"
- */
-export function getVersion(): string {
-  return require("verdaccio/package.json").version
-}
-
 //
 // Validation
 //
-
-function validateVersion() {
-  const version = getVersion()
-
-  if (version < "5") {
-    throw new Error("This plugin requires verdaccio 5 or above")
-  }
-}
 
 function validateNodeExists(
   config: VerdaccioGithubOauthConfig,
@@ -104,13 +89,11 @@ export class ParsedPluginConfig {
   readonly url_prefix: string
   readonly clientId: string
   readonly clientSecret: string
-  readonly token: string
   readonly enterpriseOrigin: string | undefined
   readonly cacheTTLms: number | undefined
+  readonly org: string | undefined
 
   constructor(readonly config: VerdaccioGithubOauthConfig) {
-    validateVersion()
-
     validateNodeExists(config, "middlewares")
     validateNodeExists(config, "auth")
 
@@ -128,12 +111,6 @@ export class ParsedPluginConfig {
       assert.string.nonEmpty,
     )
 
-    this.token = getConfigValue<string>(
-      this.config,
-      "token",
-      assert.string.nonEmpty,
-    )
-
     this.enterpriseOrigin = getConfigValue<string | undefined>(
       this.config,
       "enterprise-origin",
@@ -141,6 +118,12 @@ export class ParsedPluginConfig {
         assert.undefined,
         assert.string.url.nonEmpty.not.startsWith(publicGitHubOrigin),
       ),
+    )
+
+    this.org = getConfigValue<string>(
+      this.config,
+      "org",
+      assert.any(assert.undefined, assert.string.nonEmpty),
     )
 
     this.cacheTTLms = getConfigValue<number>(
@@ -186,6 +169,10 @@ export class ParsedPluginConfig {
         })
       },
     )
+
+    if (this.org) {
+      configuredGroups.push(`github/org/${this.org}`)
+    }
 
     const configuredGroupsDeduped = [...new Set(configuredGroups)]
 

@@ -9,7 +9,7 @@ import { VerdaccioGithubOauthConfig, ParsedPluginConfig } from "./Config"
 import { PatchHtml } from "./PatchHtml"
 import { ServeStatic } from "./ServeStatic"
 import { Verdaccio } from "./Verdaccio"
-import { createAuthenticatedUser } from "../helpers"
+import { createAuthenticatedUser, organizationAllowed } from "../helpers"
 
 type Package = PackageAccess & (AllowAccess | VerdaccioGithubOauthConfig)
 type Action = "access" | "publish" | "unpublish"
@@ -63,29 +63,12 @@ export class Plugin
     const children = [
       new ServeStatic(),
       new PatchHtml(this.parsedConfig),
-      new WebFlow(this.verdaccio, this.parsedConfig, this.provider),
-      new CliFlow(this.verdaccio, this.provider),
+      new WebFlow(this.verdaccio, this.parsedConfig, this.provider, this.cache),
+      new CliFlow(this.verdaccio, this.provider, this.parsedConfig, this.cache),
     ]
 
     for (const child of children) {
       child.register_middlewares(app)
-    }
-  }
-
-  private async userNameAndTokenMatch(
-    userName: string,
-    userToken: string,
-  ): Promise<boolean> {
-    try {
-      const userNameForToken = await this.provider.getUserName(userToken)
-      if (userNameForToken !== userName) {
-        logger.error("The token does not match the user name")
-        return false
-      }
-      return true
-    } catch (error) {
-      logger.error(error)
-      return false
     }
   }
 
@@ -98,16 +81,27 @@ export class Plugin
     callback: pluginUtils.AuthCallback,
   ): Promise<void> {
     try {
-      if (
-        !userName ||
-        !userToken ||
-        !(await this.userNameAndTokenMatch(userName, userToken))
-      ) {
+      if (!userName || !userToken) {
         callback(null, false)
         return
       }
 
-      const user = createAuthenticatedUser(userName)
+      const userInfo = await this.cache.getUserInfo(userToken)
+      if (userInfo === null || userInfo.userName !== userName) {
+        logger.error("The token does not match the user name")
+        callback(null, false)
+        return
+      }
+
+      if (!organizationAllowed(this.parsedConfig, userInfo.userGroups)) {
+        callback(null, false)
+        return
+      }
+
+      const user = createAuthenticatedUser(
+        userInfo.userName,
+        userInfo.userGroups,
+      )
 
       callback(null, user.real_groups)
     } catch (error) {
@@ -129,7 +123,7 @@ export class Plugin
     }
 
     const requiredGroups = pkg[action] as string[] | undefined
-    const userGroups = await this.cache.getGroups(user.name)
+    const userGroups = user.groups
     const grant = !!requiredGroups?.some((group) => userGroups.includes(group))
 
     logAccess(user, pkg, action, grant)

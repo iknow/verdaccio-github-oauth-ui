@@ -3,7 +3,7 @@ import { expect, it } from "vitest"
 import { createAuthenticatedUser } from "src/server/helpers"
 
 it("createAuthenticatedUser", () => {
-  const user = createAuthenticatedUser(testUserName)
+  const user = createAuthenticatedUser(testUserName, [])
 
   expect(user).toMatchInlineSnapshot(`
     {

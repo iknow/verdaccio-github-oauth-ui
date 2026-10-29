@@ -6,10 +6,12 @@ import { buildErrorPage } from "../../statusPage"
 import { AuthProvider } from "../plugin/AuthProvider"
 import { ParsedPluginConfig } from "../plugin/Config"
 import { Verdaccio } from "../plugin/Verdaccio"
+import { Cache } from "../plugin/Cache"
 import {
   createAuthenticatedUser,
   getBaseUrl,
   IPluginMiddleware,
+  organizationAllowed,
 } from "../helpers"
 
 const COOKIE_OPTIONS = {
@@ -22,15 +24,18 @@ export class WebFlow implements IPluginMiddleware {
   private readonly verdaccio: Verdaccio
   private readonly config: ParsedPluginConfig
   private readonly provider: AuthProvider
+  private readonly cache: Cache
 
   constructor(
     verdaccio: Verdaccio,
     config: ParsedPluginConfig,
     provider: AuthProvider,
+    cache: Cache,
   ) {
     this.verdaccio = verdaccio
     this.config = config
     this.provider = provider
+    this.cache = cache
   }
 
   /**
@@ -76,7 +81,13 @@ export class WebFlow implements IPluginMiddleware {
       const code = this.provider.getCode(req)
       const githubToken = await this.provider.getToken(code)
       const userName = await this.provider.getUserName(githubToken)
-      const user = createAuthenticatedUser(userName)
+
+      const userGroups = await this.cache.getGroups(githubToken)
+      if (!organizationAllowed(this.config, userGroups)) {
+        throw new Error("User not part of org")
+      }
+
+      const user = createAuthenticatedUser(userName, userGroups)
       const uiToken = await this.verdaccio.issueUiToken(user)
       const npmToken = await this.verdaccio.issueNpmToken(user, githubToken)
 

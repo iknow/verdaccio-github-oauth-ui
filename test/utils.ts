@@ -60,7 +60,6 @@ export function createTestPluginConfig(
   return {
     "client-id": testClientId,
     "client-secret": testClientSecret,
-    token: testToken,
     ...pluginConfig,
   }
 }
@@ -124,8 +123,8 @@ export function createTestAuthProvider() {
       }
       throw new Error(testErrorMessage)
     },
-    async getGroups(userName: string) {
-      if (userName === testUserName) {
+    async getGroups(userToken: string) {
+      if (userToken === testOAuthToken) {
         return [...testProviderGroups]
       }
       return []

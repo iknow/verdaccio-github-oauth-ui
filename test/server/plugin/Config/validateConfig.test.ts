@@ -1,9 +1,7 @@
 import { pluginKey } from "src/constants"
 import { ParsedPluginConfig } from "src/server/plugin/Config"
 import { createTestPluginConfig } from "test/utils"
-import { describe, it, vi } from "vitest"
-
-vi.mock("verdaccio/package.json")
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 describe("Config", () => {
   describe("validate config", () => {
@@ -14,11 +12,16 @@ describe("Config", () => {
       new ParsedPluginConfig(config)
     }
 
-    it("accepts an empty 'auth' node as long as it is enabled", () => {
+    beforeEach(() => {
+      vi.mocked(process.exit).mockClear()
+    })
+
+    it("reads plugin settings from the 'auth' node only", () => {
       createConfig({
         auth: { [pluginKey]: enabledPluginConfig },
         middlewares: { [pluginKey]: pluginConfig },
       })
+      expect(process.exit).toHaveBeenCalledWith(1)
     })
 
     it("accepts an empty 'middlewares' node as long as it is enabled", () => {
@@ -26,6 +29,7 @@ describe("Config", () => {
         auth: { [pluginKey]: pluginConfig },
         middlewares: { [pluginKey]: enabledPluginConfig },
       })
+      expect(process.exit).not.toHaveBeenCalled()
     })
 
     it("treats 'enterprise-origin' as optional", () => {
@@ -37,14 +41,7 @@ describe("Config", () => {
           [pluginKey]: enabledPluginConfig,
         },
       })
-    })
-
-    it.fails("throws an error if the major version is below 5", () => {
-      require("verdaccio/package.json").version = "4.3.2"
-      createConfig({
-        auth: { [pluginKey]: pluginConfig },
-        middlewares: { [pluginKey]: enabledPluginConfig },
-      })
+      expect(process.exit).not.toHaveBeenCalled()
     })
 
     it.fails("throws an error if 'auth' node is not enabled", () => {
@@ -59,7 +56,7 @@ describe("Config", () => {
       })
     })
 
-    it.fails("throws an error if 'client-id' is missing", () => {
+    it("exits if 'client-id' is missing", () => {
       createConfig({
         auth: {
           [pluginKey]: { ...pluginConfig, ["client-id"]: undefined },
@@ -68,9 +65,10 @@ describe("Config", () => {
           [pluginKey]: { enabled: true },
         },
       })
+      expect(process.exit).toHaveBeenCalledWith(1)
     })
 
-    it.fails("throws an error if 'client-secret' is missing", () => {
+    it("exits if 'client-secret' is missing", () => {
       createConfig({
         auth: {
           [pluginKey]: { ...pluginConfig, ["client-secret"]: undefined },
@@ -79,17 +77,7 @@ describe("Config", () => {
           [pluginKey]: { enabled: true },
         },
       })
-    })
-
-    it.fails("throws an error if 'token' is missing", () => {
-      createConfig({
-        auth: {
-          [pluginKey]: { ...pluginConfig, ["token"]: undefined },
-        },
-        middlewares: {
-          [pluginKey]: { enabled: true },
-        },
-      })
+      expect(process.exit).toHaveBeenCalledWith(1)
     })
   })
 })
